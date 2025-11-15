@@ -612,6 +612,7 @@ header {
 .logout-btn:hover {
     background: #d32f2f;
 }
+
 .google-login-btn {
     display: flex;
     align-items: center;
