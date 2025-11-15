@@ -58,7 +58,7 @@
                 <li><a href="{{ route('about') }}">Giới thiệu</a></li>
                 <li><a href="{{ route('contact') }}">Liên hệ</a></li>
                 @auth
-                    <li><a href="{{ route('orders.myOrders') }}" style="text-align:center"><i class="fa-solid fa-receipt"></i> Đơn hàng</a></li>
+                <li><a href="{{ route('orders.myOrders') }}" style="text-align:center"><i class="fa-solid fa-receipt"></i> Đơn hàng</a></li>
                 @endauth
                 </li>
                 <li>
@@ -95,10 +95,10 @@
                 <a href="{{ route('login.form') }}">Đăng nhập</a>
                 <a href="{{ route('signup.form') }}">Đăng ký</a>
                 <div class="divider"></div>
-                <button class="google-login">
-                    <img src="{{ asset('assets/images/icon_gg.png') }}" alt="Google" width="18">
-                    Đăng nhập với Google
-                </button>
+                <a href="{{ route('auth.google') }}" class="google-login-btn">
+                    <img src="{{ asset('assets/images/icon_gg.png') }}" alt="Google" class="google-icon">
+                    <span>Đăng nhập với Google</span>
+                </a>
                 @endauth
             </div>
         </div>

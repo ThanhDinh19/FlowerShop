@@ -67,7 +67,7 @@ class AuthController extends Controller
             'PhoneNumber' => $request->phone_number,
             'Address'     => $request->address,
             'Email'       => $request->email,
-            'Password'    => Hash::make($request->password), // 👈 mã hóa mật khẩu
+            'Password'    => Hash::make($request->password), 
             'Role'        => 'customer',
         ]);
 

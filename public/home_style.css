@@ -612,3 +612,35 @@ header {
 .logout-btn:hover {
     background: #d32f2f;
 }
+.google-login-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1); /* giống ảnh, nền tối nhạt */
+    border: 2px solid rgba(255, 255, 255, 0.7); /* viền trắng */
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-decoration: none;
+    width: 100%;
+    color: #fff !important; /* chữ luôn trắng */
+    font-size: 15px;
+    font-weight: 600;
+    backdrop-filter: blur(4px); /* làm đẹp thêm */
+    transition: all 0.2s ease;
+}
+
+/* Hover KHÔNG thay đổi màu */
+.google-login-btn:hover {
+    background: rgba(255, 255, 255, 0.15); /* chỉ sáng nhẹ thêm */
+    border-color: #fff;
+    color: #fff !important; /* giữ trắng */
+}
+
+.google-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.google-login-btn span {
+    white-space: nowrap;
+}

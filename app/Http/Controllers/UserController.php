@@ -24,7 +24,7 @@ class UserController extends Controller
             'PhoneNumber' => 'nullable|string|max:15',
             'Address' => 'nullable|string|max:255',
         ]);
-
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $user->update($request->only(['FirstName', 'LastName', 'PhoneNumber', 'Address']));
 

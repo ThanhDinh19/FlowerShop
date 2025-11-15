@@ -16,6 +16,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LoginGoogleController;
 
 Route::middleware(['web'])->group(function () {
 
@@ -98,6 +99,11 @@ Route::middleware(['web'])->group(function () {
     });
 
     Route::get('/vnpay/return', [OrderController::class, 'vnpayReturn'])->name('vnpay.return');
+
+    Route::controller(LoginGoogleController::class)->group(function(){
+        Route::get('auth/google', 'redirectToGoogle')->name('auth.google');
+        Route::get('auth/google/callback', 'handleGoogleCallback');
+    });
 
 });
 
