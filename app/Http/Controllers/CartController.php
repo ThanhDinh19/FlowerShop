@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException;
 
 class CartController extends Controller
 {
@@ -70,7 +71,14 @@ class CartController extends Controller
         if ($cartItem->UserID != Auth::id()) abort(403);
 
         $cartItem->Quantity = $request->quantity;
-        $cartItem->save();
+        try {
+            $cartItem->save();
+        } catch (QueryException $e) {
+            // Nếu trigger trên DB báo lỗi (SQLSTATE 45000), trả về JSON để client hiển thị
+            return response()->json([
+                'error' => 'Không thể cập nhật số lượng: không đủ tồn kho.'
+            ], 422);
+        }
 
         // Tính lại tiền
         $itemTotal = $cartItem->product->Price * $cartItem->Quantity;

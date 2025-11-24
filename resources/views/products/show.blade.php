@@ -54,7 +54,7 @@
 
             <div class="quantity-section">
                 <label for="qty-input" class="qty-label">Số lượng</label>
-                <div class="qty-controls">
+                <div class="qty-controls" data-stock="{{ $product->StockQuantity }}">
                     <button type="button" class="qty-btn minus" onclick="decreaseQty()">−</button>
                     <input id="qty-input" type="number" name="quantity" min="1" value="1" readonly>
                     <button type="button" class="qty-btn plus" onclick="increaseQty()">+</button>
@@ -449,7 +449,16 @@
 
     function increaseQty() {
         var input = document.getElementById('qty-input');
-        input.value = parseInt(input.value) + 1;
+        var controls = document.querySelector('.qty-controls');
+        var stock = parseInt(controls.dataset.stock) || 0;
+        var current = parseInt(input.value) || 1;
+
+        if (current < stock) {
+            input.value = current + 1;
+        } else {
+            alert('⚠️ Sản phẩm chỉ còn ' + stock + ' sản phẩm trong kho! Không thể tăng thêm.');
+            return;
+        }
         syncQuantity();
     }
     
