@@ -3,42 +3,76 @@
 @section('content')
 <!-- Hero section -->
 <section class="hero">
-    <div>
+    <div class="hero-content">
+        <span class="hero-badge">🌸 Chào mừng đến với shop hoa</span>
         <h2>Hoa Tươi Mỗi Ngày</h2>
         <p>Làm đẹp không gian sống cùng những bó hoa rực rỡ</p>
-        <button>Mua ngay</button>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-number">200+</span>
+                <span class="stat-label">Sản phẩm</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">1000+</span>
+                <span class="stat-label">Khách hàng</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">100%</span>
+                <span class="stat-label">Hoa tươi</span>
+            </div>
+        </div>
     </div>
 </section>
 
 <!-- Products section -->
 <section class="products">
-    <h2>Sản phẩm nổi bật</h2>
+    <div class="section-header">
+        <h2>Sản phẩm nổi bật</h2>
+        <p class="section-subtitle">Khám phá bộ sưu tập hoa tươi đẹp nhất</p>
+    </div>
+    
     <div class="product-grid">
         @foreach($products as $product)
-        <div class="product {{ $product->StockQuantity == 0 ? 'out-of-stock' : '' }}">
-            <a href="{{ route('products.show', $product->ProductID) }}">
-                <img src="{{ asset('assets/product_images/'.$product->Image) }}" alt="{{ $product->ProductName }}">
-            </a>
-            <h3>
-                <a href="{{ route('products.show', $product->ProductID) }}">{{ $product->ProductName }}</a>
-            </h3>
-            <p>{{ number_format($product->Price, 0, ',', '.') }}đ</p>
+        <div class="product-card {{ $product->StockQuantity == 0 ? 'out-of-stock' : '' }}">
+            <div class="product-image-wrapper">
+                <a href="{{ route('products.show', $product->ProductID) }}">
+                    <img src="{{ asset('assets/product_images/'.$product->Image) }}" alt="{{ $product->ProductName }}">
+                </a>
+                
+                {{-- Badge tồn kho --}}
+                @if ($product->StockQuantity == 0)
+                    <span class="stock-badge badge-out">Hết hàng</span>
+                @elseif ($product->StockQuantity <= 5)
+                    <span class="stock-badge badge-low">Còn {{ $product->StockQuantity }}</span>
+                @endif
+            </div>
+            
+            <div class="product-info">
+                <h3>
+                    <a href="{{ route('products.show', $product->ProductID) }}">{{ $product->ProductName }}</a>
+                </h3>
+                <div class="product-price">
+                    <span class="price">{{ number_format($product->Price, 0, ',', '.') }}₫</span>
+                </div>
 
-            {{-- thông báo tồn kho --}}
-            @if ($product->StockQuantity==0)
-                <span class="badge out-of-stock">Hết hàng</span>
-            @elseif ($product->StockQuantity <= 5)
-                <span class="badge low-stock">⚠️ Chỉ còn {{ $product->StockQuantity }} sản phẩm</span>
-            @endif
-
-            @if ($product->StockQuantity>0)
-                <form action="{{ route('cart.add', $product->ProductID) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn add-cart-btn">🛍️ Thêm vào giỏ hàng</button>
-                </form>
-            @else
-                <button class="btn add-cart-btn" disabled>🛍️ Không thể mua hàng</button>
-            @endif
+                @if ($product->StockQuantity > 0)
+                    <form action="{{ route('cart.add', $product->ProductID) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-add-cart">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Thêm vào giỏ
+                        </button>
+                    </form>
+                @else
+                    <button class="btn-add-cart btn-disabled" disabled>
+                        Tạm hết hàng
+                    </button>
+                @endif
+            </div>
         </div>
         @endforeach
     </div>
@@ -46,291 +80,445 @@
     <!-- Phân trang -->
     <div class="pagination">
         @if ($products->onFirstPage())
-        <span class="disabled">«</span>
+        <span class="page-item disabled">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </span>
         @else
-        <a href="{{ $products->previousPageUrl() }}">«</a>
+        <a href="{{ $products->previousPageUrl() }}" class="page-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </a>
         @endif
 
         @foreach ($products->links()->elements[0] ?? [] as $page => $url)
-        @if ($page == $products->currentPage())
-        <span class="active">{{ $page }}</span>
-        @else
-        <a href="{{ $url }}">{{ $page }}</a>
-        @endif
+            @if ($page == $products->currentPage())
+                <span class="page-item active">{{ $page }}</span>
+            @else
+                <a href="{{ $url }}" class="page-item">{{ $page }}</a>
+            @endif
         @endforeach
 
         @if ($products->hasMorePages())
-        <a href="{{ $products->nextPageUrl() }}">»</a>
+        <a href="{{ $products->nextPageUrl() }}" class="page-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </a>
         @else
-        <span class="disabled">»</span>
+        <span class="page-item disabled">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </span>
         @endif
     </div>
-
 </section>
 
-
 <style>
-
-    /* ===== STOCK BADGE ===== */
-    .badge {
-        display: inline-block;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-        border-radius: 8px;
-        padding: 5px 10px;
-        font-weight: 600;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
-
-    .low-stock {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
-    }
-
-    .out-of-stock {
-        background-color: #f8d7da;
-        color: #842029;
-        border: 1px solid #f5c2c7;
-    }
-
-    /* ===== DISABLED BUTTON ===== */
-    .disabled-btn {
-        background: #ccc;
-        cursor: not-allowed;
-        color: #666;
-        border-radius: 25px;
-        padding: 10px 18px;
-        border: none;
-        font-weight: 500;
-    }
-
 
     /* ===== HERO SECTION ===== */
-
-    .product a {
-        text-decoration: none;
-        /* bỏ gạch dưới */
-        color: #c9184a;
-        /* đỏ hồng nhẹ */
-        font-weight: 600;
-        transition: color 0.3s ease;
-    }
-
-    .product a:hover {
-        color: #ff4d6d;
-        /* đỏ sáng hơn khi hover */
-        text-decoration: underline;
-        /* có thể thêm gạch chân khi hover nếu thích */
-    }
-
     .hero {
         position: relative;
-        background: linear-gradient(135deg, rgba(255, 192, 203, 0.7), rgba(255, 182, 193, 0.4)),
-            url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
-        height: 70vh;
+        background: linear-gradient(135deg, rgba(255, 105, 135, 0.85), rgba(255, 182, 193, 0.6)),
+            url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+        min-height: 75vh;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
-        padding-left: 10%;
+        justify-content: center;
+        padding: 60px 5%;
         color: #fff;
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        border-bottom-left-radius: 40px;
-        border-bottom-right-radius: 40px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
     }
 
-    .hero div {
-        max-width: 500px;
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .hero-content {
+        max-width: 700px;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .hero h2 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 15px;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
         color: #fff;
-        letter-spacing: 1px;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        letter-spacing: -1px;
     }
 
     .hero p {
-        font-size: 1.2rem;
-        margin-bottom: 25px;
-        color: #f9f9f9;
+        font-size: 1.3rem;
+        margin-bottom: 40px;
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 300;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .hero button {
-        background: linear-gradient(135deg, #ff8fa3, #ff4d6d);
-        color: #fff;
-        border: none;
-        padding: 12px 28px;
-        font-size: 1rem;
-        border-radius: 25px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(255, 77, 109, 0.3);
+    .hero-stats {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        margin-top: 40px;
     }
 
-    .hero button:hover {
-        background: linear-gradient(135deg, #ff4d6d, #c9184a);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(201, 24, 74, 0.4);
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 20px 30px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
     }
 
     /* ===== PRODUCTS SECTION ===== */
     .products {
+        padding: 80px 5%;
+        background: linear-gradient(to bottom, #fff 0%, #fff8f9 100%);
+    }
+
+    .section-header {
         text-align: center;
-        padding: 70px 8%;
-        background-color: #fff8f9;
+        margin-bottom: 60px;
     }
 
-    .products h2 {
-        font-size: 2.2rem;
-        color: #c9184a;
-        text-transform: uppercase;
-        margin-bottom: 45px;
+    .section-header h2 {
+        font-size: 2.5rem;
+        color: #2d3436;
+        font-weight: 700;
+        margin-bottom: 12px;
         position: relative;
+        display: inline-block;
     }
 
-    .products h2::after {
+    .section-header h2::after {
         content: '';
-        display: block;
-        width: 80px;
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
         height: 4px;
-        background: #ff8fa3;
-        margin: 10px auto 0;
+        background: linear-gradient(90deg, #ff6b9d, #c9184a);
         border-radius: 2px;
     }
 
-    /* GRID */
-    .product-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 30px;
+    .section-subtitle {
+        color: #636e72;
+        font-size: 1.1rem;
+        margin-top: 20px;
     }
 
-    /* CARD */
-    .product {
+    /* PRODUCT GRID */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+    }
+
+    /* PRODUCT CARD */
+    .product-card {
         background: #fff;
-        border-radius: 15px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-        padding: 15px;
-        text-align: center;
-        transition: all 0.3s ease;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
     }
 
-    .product:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 10px 25px rgba(255, 143, 171, 0.25);
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 35px rgba(255, 107, 157, 0.2);
     }
 
-    .product img {
+    .product-card.out-of-stock {
+        opacity: 0.7;
+    }
+
+    .product-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        height: 280px;
+        background: #f8f9fa;
+    }
+
+    .product-image-wrapper img {
         width: 100%;
-        height: 230px;
+        height: 100%;
         object-fit: cover;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
+        transition: transform 0.5s ease;
     }
 
-    .product:hover img {
-        transform: scale(1.05);
+    .product-card:hover .product-image-wrapper img {
+        transform: scale(1.08);
     }
 
-    .product h3 {
-        font-size: 1.1rem;
-        color: #222;
-        margin-bottom: 5px;
+    /* STOCK BADGE */
+    .stock-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
         font-weight: 600;
+        backdrop-filter: blur(10px);
+        z-index: 2;
     }
 
-    .product p {
-        color: #c9184a;
-        font-weight: 700;
-        margin-bottom: 12px;
-        font-size: 1rem;
+    .badge-low {
+        background: rgba(255, 193, 7, 0.95);
+        color: #856404;
+        border: 1px solid rgba(255, 193, 7, 0.3);
     }
 
-    /* BUTTON */
-    .product button {
-        padding: 10px 18px;
-        background: linear-gradient(135deg, #ffb3c6, #c9184a);
-        border: none;
-        border-radius: 25px;
+    .badge-out {
+        background: rgba(220, 53, 69, 0.95);
         color: #fff;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    /* PRODUCT INFO */
+    .product-info {
+        padding: 20px;
+    }
+
+    .product-info h3 {
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .product-info h3 a {
+        color: #2d3436;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .product-info h3 a:hover {
+        color: #ff6b9d;
+    }
+
+    .product-price {
+        margin-bottom: 15px;
+    }
+
+    .price {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #c9184a;
+    }
+
+    /* ADD TO CART BUTTON */
+    .btn-add-cart {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #c9184a 100%);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        font-weight: 500;
-        box-shadow: 0 4px 10px rgba(201, 24, 74, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
 
-    .product button:hover {
-        background: linear-gradient(135deg, #c9184a, #800f2f);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 14px rgba(201, 24, 74, 0.35);
+    .btn-add-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(201, 24, 74, 0.3);
+    }
+
+    .btn-add-cart:active {
+        transform: translateY(0);
+    }
+
+    .btn-disabled {
+        background: linear-gradient(135deg, #b2bec3 0%, #95a5a6 100%);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 60px;
+    }
+
+    .page-item {
+        min-width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #fff;
+        border: 2px solid #f1f3f5;
+        color: #495057;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .page-item:hover:not(.disabled):not(.active) {
+        background: #fff5f7;
+        border-color: #ffb3c6;
+        color: #c9184a;
+        transform: translateY(-2px);
+    }
+
+    .page-item.active {
+        background: linear-gradient(135deg, #ff6b9d, #c9184a);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(201, 24, 74, 0.25);
+    }
+
+    .page-item.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
         .hero {
-            height: 55vh;
-            padding-left: 5%;
-            text-align: center;
-            justify-content: center;
-        }
-
-        .hero div {
-            max-width: 90%;
+            min-height: 60vh;
+            padding: 40px 5%;
         }
 
         .hero h2 {
-            font-size: 2rem;
+            font-size: 2.2rem;
         }
 
         .hero p {
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
-        .product img {
-            height: 190px;
+        .hero-stats {
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            padding: 15px 20px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+        }
+
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-image-wrapper {
+            height: 240px;
+        }
+
+        .pagination {
+            margin-top: 40px;
+        }
+
+        .page-item {
+            min-width: 38px;
+            height: 38px;
         }
     }
 
+    @media (max-width: 480px) {
+        .hero h2 {
+            font-size: 1.8rem;
+        }
 
-    /* phân trang */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-top: 40px;
-        font-size: 1rem;
-    }
+        .product-grid {
+            grid-template-columns: 1fr;
+        }
 
-    .pagination a,
-    .pagination span {
-        display: inline-block;
-        padding: 8px 14px;
-        border-radius: 10px;
-        border: 1px solid #ffb3c6;
-        color: #c9184a;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
+        .hero-stats {
+            gap: 10px;
+        }
 
-    .pagination a:hover {
-        background: #ffb3c6;
-        color: white;
-    }
-
-    .pagination .active {
-        background: linear-gradient(135deg, #ff8fa3, #c9184a);
-        color: white;
-        border: none;
-    }
-
-    .pagination .disabled {
-        opacity: 0.5;
-        pointer-events: none;
+        .stat-item {
+            flex: 1;
+            padding: 12px 15px;
+        }
     }
 </style>
 

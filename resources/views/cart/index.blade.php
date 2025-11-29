@@ -114,6 +114,16 @@
                             document.getElementById('cart-total').textContent =
                                 data.cart_total.toLocaleString('vi-VN') + 'đ';
                         }
+                    } else {
+                        // Thử parse JSON lỗi từ server
+                        let err = 'Cập nhật thất bại';
+                        try {
+                            const body = await response.json();
+                            if (body && body.error) err = body.error;
+                        } catch (e) {}
+                        alert('⚠️ ' + err);
+                        // Khôi phục giá trị input về giá trị cũ để tránh bất nhất
+                        input.value = qty > stock ? stock : qty;
                     }
                 });
             });

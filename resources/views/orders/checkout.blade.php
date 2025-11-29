@@ -7,11 +7,23 @@
 
         <div class="user-info">
             <h4>👤 Thông tin người dùng</h4>
+
             <p><strong>Khách Hàng Tên:</strong> {{ $user->LastName }}</p>
             <p><strong>Email:</strong> {{ $user->Email }}</p>
-            <p><strong>Số Điện Thoại:</strong> {{ $user->PhoneNumber }}</p>
-            <p><strong>Địa Chỉ:</strong> {{ $user->Address }}</p>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">📞 Số điện thoại</label>
+                <input type="text" name="PhoneNumber" class="form-control elegant-input"
+                    value="{{ old('PhoneNumber', $user->PhoneNumber) }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">📍 Địa chỉ</label>
+                <input type="text" name="Address" class="form-control elegant-input"
+                    value="{{ old('Address', $user->Address) }}">
+            </div>
         </div>
+
 
         <h4 class="mt-4">🛒 Sản phẩm trong giỏ</h4>
         <table class="table table-bordered">
@@ -93,7 +105,7 @@
                         💌 Lời nhắn đến người nhận
                     </label>
                     <textarea name="MessageToRecipient" class="form-control elegant-input"
-                        rows="3" placeholder="VD: Gửi tặng em ngày đặc biệt này ❤️">{{ old('MessageToRecipient') }}</textarea>
+                        rows="3" placeholder="Gửi tặng...">{{ old('MessageToRecipient') }}</textarea>
                 </div>
 
                 {{-- Phương thức thanh toán --}}

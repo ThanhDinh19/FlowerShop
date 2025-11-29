@@ -25,6 +25,11 @@ class OrderController extends Controller
     public function confirm(Request $request)
     {
         $user = Auth::user();
+        // --- Lưu thông tin người dùng sửa lại trước khi tạo đơn ---
+        $user->update([
+            'PhoneNumber' => $request->PhoneNumber,
+            'Address'     => $request->Address,
+        ]);
         $cartItems = CartItem::with('product')->where('UserID', $user->UserID)->get();
 
         if ($cartItems->isEmpty()) {
@@ -33,7 +38,6 @@ class OrderController extends Controller
 
         $total = $cartItems->sum(fn($item) => $item->product->Price * $item->Quantity);
 
-        // Validate dữ liệu
         $request->validate([
             'DeliveryDateTime' => 'required|date|after_or_equal:today',
             'RecipientAddress' => 'nullable|string|max:255',
@@ -41,29 +45,57 @@ class OrderController extends Controller
             'PaymentMethod' => 'required|in:cash,vnpay',
         ]);
 
-        //  Chuyển sang Carbon để xử lý thời gian
         $deliveryTime = \Carbon\Carbon::parse($request->DeliveryDateTime, 'Asia/Ho_Chi_Minh');
 
-        // Kiểm tra chính xác: deliveryTime phải lớn hơn thời gian hiện tại ít nhất 2 giờ
-        // (so sánh bằng phương thức Carbon giúp tránh các lỗi làm tròn của diffInHours)
         if (now('Asia/Ho_Chi_Minh')->diffInHours($deliveryTime, false) < 2) {
             return back()->withErrors(['DeliveryDateTime' => 'Thời gian giao hàng phải cách hiện tại ít nhất 2 giờ.'])->withInput();
         }
 
-        // Tạo đơn hàng
+        // ----------------------------------------
+        // CASE 1: THANH TOÁN VNPAY → KHÔNG TẠO ORDER
+        // ----------------------------------------
+        if ($request->PaymentMethod === 'vnpay') {
+
+            // Tạo order giả (KHÔNG LƯU DB)
+            $order = new Order();
+            $order->OrderID = time(); // tạo ID tạm
+            $order->TotalAmount = $total;
+
+            // Lưu ORDERID & thông tin vào session để callback dùng
+            session([
+                'checkout_temp' => [
+                    'order_id' => $order->OrderID,
+                    'user_id' => $user->UserID,
+                    'delivery_time' => $deliveryTime,
+                    'address' => $request->RecipientAddress ?? $user->Address,
+                    'message' => $request->MessageToRecipient,
+                    'total' => $total
+                ]
+            ]);
+
+            // Dùng được createVnpayUrl($order) mà KHÔNG lưu DB
+            $paymentUrl = $this->createVnpayUrl($order);
+
+            return redirect()->away($paymentUrl);
+        }
+
+
+        // ----------------------------------------
+        // CASE 2: THANH TOÁN TIỀN MẶT → TẠO ORDER NGAY
+        // ----------------------------------------
+
         $order = Order::create([
             'UserID' => $user->UserID,
             'OrderDate' => now('Asia/Ho_Chi_Minh'),
             'DeliveryDateTime' => $deliveryTime,
             'RecipientAddress' => $request->RecipientAddress ?? $user->Address,
             'MessageToRecipient' => $request->MessageToRecipient,
-            'PaymentMethod' => $request->PaymentMethod,
+            'PaymentMethod' => 'cash',
             'TotalAmount' => $total,
             'Status' => 'pending',
             'PaymentConfirmed' => false,
         ]);
 
-        // Tạo chi tiết đơn hàng
         foreach ($cartItems as $item) {
             OrderItem::create([
                 'OrderID' => $order->OrderID,
@@ -74,24 +106,12 @@ class OrderController extends Controller
             ]);
         }
 
-        // Xoá giỏ hàng
         CartItem::where('UserID', $user->UserID)->delete();
 
-        // Nếu chọn chuyển khoản → hiển thị QR
-        // if ($request->PaymentMethod === 'bank_transfer') {
-        //     return redirect()->route('orders.qr', ['id' => $order->OrderID]);
-        // }
-
-        if ($request->PaymentMethod === 'vnpay') {
-            $paymentUrl = $this->createVnpayUrl($order);
-            //dd($paymentUrl);
-            return redirect()->away($paymentUrl);  // CHUYỂN NGAY QUA VNPAY
-        }
-
-        // Chuyển qua trang hóa đơn
         return redirect()->route('orders.invoice', ['id' => $order->OrderID])
             ->with('success', 'Thanh toán thành công!');
     }
+
 
     // Trang hiển thị hóa đơn
     public function invoice($id)
@@ -264,15 +284,44 @@ class OrderController extends Controller
 
         if ($request->vnp_ResponseCode == "00") {
 
-            $order = Order::with(['items.product', 'user'])
-                ->find($request->vnp_TxnRef);
+            $data = session('checkout_temp');
 
-            if ($order && !$order->PaymentConfirmed) {
-                $order->update([
-                    'Status' => 'paid',
-                    'PaymentConfirmed' => true
+            if (!$data) {
+                return redirect()->route('cart.index')->with('error', 'Không tìm thấy dữ liệu đơn hàng.');
+            }
+
+            $user = Auth::user();
+
+            // Tạo đơn hàng sau khi thanh toán thành công ⭐
+            $order = Order::create([
+                'UserID' => $user->UserID,
+                'OrderDate' => now('Asia/Ho_Chi_Minh'),
+                'DeliveryDateTime' => $data['delivery_time'],
+                'RecipientAddress' => $data['address'],
+                'MessageToRecipient' => $data['message'],
+                'PaymentMethod' => 'vnpay',
+                'TotalAmount' => $data['total'],
+                'Status' => 'paid',
+                'PaymentConfirmed' => true,
+            ]);
+
+            // Tạo chi tiết đơn hàng
+            $cartItems = CartItem::with('product')->where('UserID', $user->UserID)->get();
+            foreach ($cartItems as $item) {
+                OrderItem::create([
+                    'OrderID' => $order->OrderID,
+                    'ProductID' => $item->ProductID,
+                    'Quantity' => $item->Quantity,
+                    'UnitPrice' => $item->product->Price,
+                    'TotalPrice' => $item->product->Price * $item->Quantity,
                 ]);
             }
+
+            // Xóa giỏ hàng
+            CartItem::where('UserID', $user->UserID)->delete();
+
+            // Xóa session tạm
+            session()->forget('checkout_temp');
 
             return view("orders.invoice", compact("order"))
                 ->with("success", "Thanh toán VNPay thành công!");

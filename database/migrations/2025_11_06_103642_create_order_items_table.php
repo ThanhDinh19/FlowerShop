@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('OrderID');
             $table->unsignedBigInteger('ProductID');
             $table->integer('Quantity');
-            $table->decimal('UnitPrice', 10, 2); // ✅ thêm dòng này
-            $table->decimal('TotalPrice', 10, 2); // ✅ và dòng này
+            $table->decimal('UnitPrice', 10, 2); //  thêm dòng này
+            $table->decimal('TotalPrice', 10, 2); //  và dòng này
             $table->timestamps();
 
             $table->foreign('OrderID')->references('OrderID')->on('orders')->onDelete('cascade');
