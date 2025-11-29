@@ -9,7 +9,7 @@
         <p>Làm đẹp không gian sống cùng những bó hoa rực rỡ</p>
         <div class="hero-stats">
             <div class="stat-item">
-                <span class="stat-number">500+</span>
+                <span class="stat-number">200+</span>
                 <span class="stat-label">Sản phẩm</span>
             </div>
             <div class="stat-item">

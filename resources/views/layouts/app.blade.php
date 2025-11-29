@@ -78,7 +78,13 @@
             <span class="username">Xin chào, <strong>{{ Auth::user()->LastName }}</strong> 🌸</span>
 
             @endauth
-            <img src="{{ asset('assets/images/default_avatar.png') }}" alt="User" class="avatar" id="avatarBtn">
+            <img
+                src="{{ Auth::check() && Auth::user()->Avatar 
+                    ? Auth::user()->Avatar 
+                    : asset('assets/images/default_avatar.png') }}"
+                alt="User Avatar"
+                class="avatar"
+                id="avatarBtn">
             @auth
 
             <div class="dropdown" id="dropdownMenu">

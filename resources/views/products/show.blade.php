@@ -20,24 +20,24 @@
             </div>
 
             <h1 class="product-title">{{ $product->ProductName }}</h1>
-            
+
             <div class="rating-preview">
                 @if(isset($averageRating))
-                    <div class="stars-inline">
-                        @php $full = floor($averageRating); $half = ($averageRating - $full) >= 0.5; @endphp
-                        @for($i=1;$i<=5;$i++)
-                            @if($i <= $full)
-                                <span class="star filled">★</span>
-                            @elseif($half && $i == $full + 1)
-                                <span class="star half">★</span>
-                            @else
-                                <span class="star">★</span>
-                            @endif
+                <div class="stars-inline">
+                    @php $full = floor($averageRating); $half = ($averageRating - $full) >= 0.5; @endphp
+                    @for($i=1;$i<=5;$i++)
+                        @if($i <=$full)
+                        <span class="star filled">★</span>
+                        @elseif($half && $i == $full + 1)
+                        <span class="star half">★</span>
+                        @else
+                        <span class="star">★</span>
+                        @endif
                         @endfor
-                    </div>
-                    <span class="rating-text">{{ $averageRating }} ({{ $reviews->count() }} đánh giá)</span>
+                </div>
+                <span class="rating-text">{{ $averageRating }} ({{ $reviews->count() }} đánh giá)</span>
                 @else
-                    <span class="rating-text">Chưa có đánh giá</span>
+                <span class="rating-text">Chưa có đánh giá</span>
                 @endif
             </div>
 
@@ -62,6 +62,10 @@
             </div>
 
             <div class="action-buttons">
+
+                @if ($product->StockQuantity > 0)
+
+                {{-- Thêm vào giỏ --}}
                 <form id="add-form" action="{{ route('cart.add', $product->ProductID) }}" method="POST">
                     @csrf
                     <input type="hidden" name="quantity" value="1">
@@ -75,19 +79,31 @@
                     </button>
                 </form>
 
+                {{-- Mua ngay --}}
                 <form id="buy-form" action="{{ route('cart.add', $product->ProductID) }}" method="POST">
                     @csrf
                     <input type="hidden" name="checkout" value="1">
-                    <input type="hidden" name="quantity" value="1">
-                    <button type="submit" class="btn1 btn-buy-now">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                            <line x1="1" y1="10" x2="23" y2="10"></line>
-                        </svg>
+                    <input type="hidden" id="buy-now-qty" name="quantity" value="1">
+
+                    <button type="submit" class="btn1 btn-buy-now" onclick="setBuyNowQuantity()">
                         Mua ngay
                     </button>
                 </form>
+
+                @else
+
+                {{-- Nút disabled khi hết hàng --}}
+                <button class="btn1 btn-disabled" disabled>
+                    Hết hàng
+                </button>
+
+                <button class="btn1 btn-disabled" disabled>
+                    Không thể mua
+                </button>
+
+                @endif
             </div>
+
         </div>
     </div>
 
@@ -99,291 +115,292 @@
                 <div class="rating-summary">
                     <div class="rating-score">
                         <span class="score-number">{{ $averageRating }}</span>
-                        <span class="score-max">/5</span>
-                    </div>
-                    <div class="rating-stars">
-                        @php $full = floor($averageRating); $half = ($averageRating - $full) >= 0.5; @endphp
-                        @for($i=1;$i<=5;$i++)
-                            @if($i <= $full)
-                                <span class="star filled">★</span>
-                            @elseif($half && $i == $full + 1)
-                                <span class="star half">★</span>
-                            @else
-                                <span class="star">★</span>
-                            @endif
-                        @endfor
-                    </div>
-                    <div class="rating-count">{{ $reviews->count() }} đánh giá</div>
-                </div>
-            @endif
-        </div>
-
-        @if($reviews->count() > 0)
-            <div class="reviews-list">
-                @foreach($reviews as $r)
-                    <div class="review-item">
-                        <div class="review-header">
-                            <div class="reviewer-info">
-                                <div class="reviewer-avatar">{{ substr($r->user ? $r->user->name : 'K', 0, 1) }}</div>
-                                <div>
-                                    <div class="reviewer-name">{{ $r->user ? $r->user->name : 'Khách' }}</div>
-                                    <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
-                                </div>
-                            </div>
-                            <div class="review-stars">
-                                @for($i=1;$i<=5;$i++)
-                                    @if($i <= $r->rating)
-                                        <span class="star filled">★</span>
-                                    @else
-                                        <span class="star">★</span>
-                                    @endif
-                                @endfor
-                            </div>
-                        </div>
-                        @if($r->comment)
-                            <div class="review-comment">{{ $r->comment }}</div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
+    <span class="score-max">/5</span>
+</div>
+<div class="rating-stars">
+    @php $full = floor($averageRating); $half = ($averageRating - $full) >= 0.5; @endphp
+    @for($i=1;$i<=5;$i++)
+        @if($i <=$full)
+        <span class="star filled">★</span>
+        @elseif($half && $i == $full + 1)
+        <span class="star half">★</span>
         @else
-            <div class="no-reviews">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-                <p>Chưa có đánh giá nào cho sản phẩm này</p>
-            </div>
+        <span class="star">★</span>
         @endif
+        @endfor
+</div>
+<div class="rating-count">{{ $reviews->count() }} đánh giá</div>
+</div>
+@endif
+</div>
 
-        <div class="review-form-section">
-            @auth
-                <h3 class="form-title">Viết đánh giá của bạn</h3>
-                <form action="{{ route('reviews.store', $product->ProductID) }}" method="POST" class="review-form">
-                    @csrf
-                    <div class="form-group">
-                        <label class="form-label">Đánh giá của bạn</label>
-                        <div class="star-rating-input">
-                            @for($i=1;$i<=5;$i++)
-                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
-                                <label for="star{{ $i }}" class="star-label">★</label>
-                            @endfor
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="comment" class="form-label">Nhận xét (tuỳ chọn)</label>
-                        <textarea name="comment" id="comment" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm...">{{ old('comment') }}</textarea>
-                    </div>
-                    <button type="submit" class="btn1 btn-submit-review">Gửi đánh giá</button>
-                    
-                    @if($errors->any())
-                        <div class="error-message">{{ $errors->first() }}</div>
+@if($reviews->count() > 0)
+<div class="reviews-list">
+    @foreach($reviews as $r)
+    <div class="review-item">
+        <div class="review-header">
+            <div class="reviewer-info">
+                <div class="reviewer-avatar">{{ substr($r->user ? $r->user->name : 'K', 0, 1) }}</div>
+                <div>
+                    <div class="reviewer-name">{{ $r->user ? $r->user->name : 'Khách' }}</div>
+                    <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
+                </div>
+            </div>
+            <div class="review-stars">
+                @for($i=1;$i<=5;$i++)
+                    @if($i <=$r->rating)
+                    <span class="star filled">★</span>
+                    @else
+                    <span class="star">★</span>
                     @endif
-                </form>
-            @else
-                <div class="login-prompt">
-                    <p>Vui lòng <a href="{{ route('login.form') }}" class="login-link">đăng nhập</a> để gửi đánh giá</p>
-                </div>
-            @endauth
-        </div>
-    </div> --}}
-
-    {{-- đạt cập nhật review--}}
-    <!-- Reviews Section -->
-    <div class="reviews-card">
-        <div class="reviews-header">
-            <h2 class="section-title">Đánh giá từ khách hàng</h2>
-
-            @if($reviews->count())
-                <div class="rating-summary">
-                    <div class="rating-score">
-                        <span class="score-number">{{ number_format($averageRating, 1) }}</span>
-                        <span class="score-max">/ 5</span>
-                    </div>
-
-                    <div class="rating-stars">
-                        @php
-                            $full = floor($averageRating);
-                            $half = ($averageRating - $full >= 0.5);
-                        @endphp
-
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= $full)
-                                <span class="star filled">★</span>
-                            @elseif($half && $i == $full + 1)
-                                <span class="star half">★</span>
-                            @else
-                                <span class="star">★</span>
-                            @endif
-                        @endfor
-                    </div>
-
-                    <div class="rating-count">{{ $reviews->count() }} đánh giá</div>
-                </div>
-            @else
-                <p>Chưa có đánh giá</p>
-            @endif
-        </div>
-
-        {{-- DANH SÁCH REVIEW --}}
-        @if($reviews->count())
-            <div class="reviews-list">
-                @foreach($reviews as $r)
-                    <div class="review-item" id="review-{{ $r->id }}">
-                        <div class="review-header">
-                            <div class="reviewer-info">
-                                <div class="reviewer-avatar">
-                                    {{ strtoupper(substr($r->user->FirstName ?? 'K', 0, 1)) }}
-                                </div>
-                                <div>
-                                    <div class="reviewer-name">{{ $r->user->FirstName ?? 'Khách' }}</div>
-                                    <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
-                                </div>
-                            </div>
-
-                             {{-- HIỂN THỊ SAO KHI CHƯA EDIT --}}
-                            <div class="review-stars display-mode">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
-                                @endfor
-                            </div>
-
-
-                            {{-- FORM SAO KHI EDIT --}}
-                            <div class="review-stars edit-mode" style="display:none;">
-                                @for($i=1;$i<=5;$i++)
-                                    <label>
-                                        <input type="radio" name="rating_{{ $r->id }}" value="{{ $i }}" {{ $i == $r->rating ? 'checked' : '' }}>
-                                        <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
-                                    </label>
-                                @endfor
-                            </div>
-
-                            {{-- <div class="review-stars">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
-                                @endfor
-                            </div> --}}
-                        </div>
-
-                        {{-- COMMENT HIỂN THỊ --}}
-                        <div class="review-comment display-mode">
-                            {{ $r->comment }}
-                        </div>
-
-                        {{-- COMMENT EDIT --}}
-                        <div class="review-comment edit-mode" style="display:none;">
-                            <textarea class="form-control" id="edit-comment-{{ $r->id }}">{{ $r->comment }}</textarea>
-                        </div>
-
-
-                        {{-- @if($r->comment)
-                            <div class="review-comment">{{ $r->comment }}</div>
-                        @endif --}}
-
-                        {{-- NÚT EDIT / DELETE --}}
-                        @auth
-                            @if(Auth::id() == $r->user_id)
-                                <div class="review-actions">
-                                    <button class="review-btn edit" onclick="enterEditMode({{ $r->id }})">Sửa</button>
-
-                                    <form action="{{ route('reviews.destroy', $r->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="review-btn delete"onclick="return confirm('Bạn chắc muốn xoá đánh giá này?')">Xóa</button>
-                                    </form>
-
-                                    {{-- NÚT CẬP NHẬT + HỦY (ẩn ban đầu) --}}
-                                    {{-- <button class="btn1 btn-update edit-mode" style="display:none;" onclick="submitEdit({{ $r->id }})">Cập nhật</button>
-                                    <button class="btn1 btn-cancel edit-mode" style="display:none;" onclick="cancelEdit({{ $r->id }})">Hủy</button> --}}
-                                    <div class="edit-actions">
-                                        <button class="review-btn save edit-mode" style="display:none;"  onclick="submitEdit({{ $r->id }})">Cập nhật</button>
-                                        <button class="review-btn cancel edit-mode" style="display:none;"  onclick="cancelEdit({{ $r->id }})">Hủy</button>
-                                    </div>
-                                </div>
-                            @endif
-                        @endauth
-                    </div>
-                @endforeach
+                    @endfor
             </div>
-        @else
-            <div class="no-reviews">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-                <p>Chưa có đánh giá nào cho sản phẩm này.</p>
-            </div>
+        </div>
+        @if($r->comment)
+        <div class="review-comment">{{ $r->comment }}</div>
         @endif
+    </div>
+    @endforeach
+</div>
+@else
+<div class="no-reviews">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+    <p>Chưa có đánh giá nào cho sản phẩm này</p>
+</div>
+@endif
 
-
-        {{-- FORM REVIEW --}}
-        <div class="review-form-section">
-            @auth
-                @if($hasPurchased && !$hasReviewed)
-                    <h3 class="form-title">Viết đánh giá của bạn</h3>
-
-                    <form action="{{ route('reviews.store', $product->ProductID) }}" method="POST" class="review-form">
-                        @csrf
-
-                        @if($errors->has('review_error'))
-                            <div class="error-message">{{ $errors->first('review_error') }}</div>
-                        @endif
-
-                        <div class="form-group">
-                            <label class="form-label">Đánh giá của bạn</label>
-                            <div class="star-rating-input">
-                                @for($i = 5; $i >= 1; $i--)
-                                    <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
-                                    <label for="star{{ $i }}" class="star-label">★</label>
-                                @endfor
-                            </div>
-                        </div>
-
-
-                        <div class="form-group">
-                            <label class="form-label">Nhận xét</label>
-                            <textarea name="comment" rows="4" placeholder="Hãy chia sẻ cảm nhận của bạn..."></textarea>
-                        </div>
-
-                        <button type="submit" class="btn1 btn-submit-review">Gửi đánh giá</button>
-                    </form>
-
-                @elseif(!$hasPurchased)
-                    <p class="text-muted">Bạn cần mua sản phẩm này trước khi đánh giá.</p>
-
-                @elseif($hasReviewed)
-                    <p class="text-muted">Bạn đã đánh giá sản phẩm này.</p>
-                @endif
-
-            @else
-                <p>Vui lòng <a href="{{ route('login.form') }}">đăng nhập</a> để viết đánh giá.</p>
-            @endauth
+<div class="review-form-section">
+    @auth
+    <h3 class="form-title">Viết đánh giá của bạn</h3>
+    <form action="{{ route('reviews.store', $product->ProductID) }}" method="POST" class="review-form">
+        @csrf
+        <div class="form-group">
+            <label class="form-label">Đánh giá của bạn</label>
+            <div class="star-rating-input">
+                @for($i=1;$i<=5;$i++)
+                    <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
+                    <label for="star{{ $i }}" class="star-label">★</label>
+                    @endfor
+            </div>
         </div>
+        <div class="form-group">
+            <label for="comment" class="form-label">Nhận xét (tuỳ chọn)</label>
+            <textarea name="comment" id="comment" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm...">{{ old('comment') }}</textarea>
+        </div>
+        <button type="submit" class="btn1 btn-submit-review">Gửi đánh giá</button>
+
+        @if($errors->any())
+        <div class="error-message">{{ $errors->first() }}</div>
+        @endif
+    </form>
+    @else
+    <div class="login-prompt">
+        <p>Vui lòng <a href="{{ route('login.form') }}" class="login-link">đăng nhập</a> để gửi đánh giá</p>
+    </div>
+    @endauth
+</div>
+</div> --}}
+
+{{-- đạt cập nhật review--}}
+<!-- Reviews Section -->
+<div class="reviews-card">
+    <div class="reviews-header">
+        <h2 class="section-title">Đánh giá từ khách hàng</h2>
+
+        @if($reviews->count())
+        <div class="rating-summary">
+            <div class="rating-score">
+                <span class="score-number">{{ number_format($averageRating, 1) }}</span>
+                <span class="score-max">/ 5</span>
+            </div>
+
+            <div class="rating-stars">
+                @php
+                $full = floor($averageRating);
+                $half = ($averageRating - $full >= 0.5);
+                @endphp
+
+                @for($i = 1; $i <= 5; $i++)
+                    @if($i <=$full)
+                    <span class="star filled">★</span>
+                    @elseif($half && $i == $full + 1)
+                    <span class="star half">★</span>
+                    @else
+                    <span class="star">★</span>
+                    @endif
+                    @endfor
+            </div>
+
+            <div class="rating-count">{{ $reviews->count() }} đánh giá</div>
+        </div>
+        @else
+        <p>Chưa có đánh giá</p>
+        @endif
     </div>
 
-    {{-- đạt cập nhật --}}
+    {{-- DANH SÁCH REVIEW --}}
+    @if($reviews->count())
+    <div class="reviews-list">
+        @foreach($reviews as $r)
+        <div class="review-item" id="review-{{ $r->id }}">
+            <div class="review-header">
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar">
+                        {{ strtoupper(substr($r->user->FirstName ?? 'K', 0, 1)) }}
+                    </div>
+                    <div>
+                        <div class="reviewer-name">{{ $r->user->FirstName ?? 'Khách' }}</div>
+                        <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
+                    </div>
+                </div>
 
-    <!-- Related Products -->
-    @if(isset($relatedProducts) && $relatedProducts->count())
-        <div class="related-section">
-            <h2 class="section-title">Sản phẩm liên quan</h2>
-            <div class="related-grid">
-                @foreach($relatedProducts as $rp)
-                    <a href="{{ route('products.show', $rp->ProductID) }}" class="related-card">
-                        <div class="related-image">
-                            <img src="{{ asset('assets/product_images/' . $rp->Image) }}" alt="{{ $rp->ProductName }}">
-                            <div class="related-overlay">
-                                <span class="view-detail">Xem chi tiết</span>
-                            </div>
-                        </div>
-                        <div class="related-info">
-                            <p class="related-name">{{ \Illuminate\Support\Str::limit($rp->ProductName, 50) }}</p>
-                            <p class="related-price">{{ number_format($rp->Price, 0, ',', '.') }} ₫</p>
-                        </div>
-                    </a>
-                @endforeach
+                {{-- HIỂN THỊ SAO KHI CHƯA EDIT --}}
+                <div class="review-stars display-mode">
+                    @for($i = 1; $i <= 5; $i++)
+                        <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
+                        @endfor
+                </div>
+
+
+                {{-- FORM SAO KHI EDIT --}}
+                <div class="review-stars edit-mode" style="display:none;">
+                    @for($i=1;$i<=5;$i++)
+                        <label>
+                        <input type="radio" name="rating_{{ $r->id }}" value="{{ $i }}" {{ $i == $r->rating ? 'checked' : '' }}>
+                        <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
+                        </label>
+                        @endfor
+                </div>
+
+                {{-- <div class="review-stars">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
+                @endfor
+            </div> --}}
+        </div>
+
+        {{-- COMMENT HIỂN THỊ --}}
+        <div class="review-comment display-mode">
+            {{ $r->comment }}
+        </div>
+
+        {{-- COMMENT EDIT --}}
+        <div class="review-comment edit-mode" style="display:none;">
+            <textarea class="form-control" id="edit-comment-{{ $r->id }}">{{ $r->comment }}</textarea>
+        </div>
+
+
+        {{-- @if($r->comment)
+                            <div class="review-comment">{{ $r->comment }}
+    </div>
+    @endif --}}
+
+    {{-- NÚT EDIT / DELETE --}}
+    @auth
+    @if(Auth::id() == $r->user_id)
+    <div class="review-actions">
+        <button class="review-btn edit" onclick="enterEditMode({{ $r->id }})">Sửa</button>
+
+        <form action="{{ route('reviews.destroy', $r->id) }}" method="POST" class="inline">
+            @csrf
+            @method('DELETE')
+            <button class="review-btn delete" onclick="return confirm('Bạn chắc muốn xoá đánh giá này?')">Xóa</button>
+        </form>
+
+        {{-- NÚT CẬP NHẬT + HỦY (ẩn ban đầu) --}}
+        {{-- <button class="btn1 btn-update edit-mode" style="display:none;" onclick="submitEdit({{ $r->id }})">Cập nhật</button>
+        <button class="btn1 btn-cancel edit-mode" style="display:none;" onclick="cancelEdit({{ $r->id }})">Hủy</button> --}}
+        <div class="edit-actions">
+            <button class="review-btn save edit-mode" style="display:none;" onclick="submitEdit({{ $r->id }})">Cập nhật</button>
+            <button class="review-btn cancel edit-mode" style="display:none;" onclick="cancelEdit({{ $r->id }})">Hủy</button>
+        </div>
+    </div>
+    @endif
+    @endauth
+</div>
+@endforeach
+</div>
+@else
+<div class="no-reviews">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+    <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+</div>
+@endif
+
+
+{{-- FORM REVIEW --}}
+<div class="review-form-section">
+    @auth
+    @if($hasPurchased && !$hasReviewed)
+    <h3 class="form-title">Viết đánh giá của bạn</h3>
+
+    <form action="{{ route('reviews.store', $product->ProductID) }}" method="POST" class="review-form">
+        @csrf
+
+        @if($errors->has('review_error'))
+        <div class="error-message">{{ $errors->first('review_error') }}</div>
+        @endif
+
+        <div class="form-group">
+            <label class="form-label">Đánh giá của bạn</label>
+            <div class="star-rating-input">
+                @for($i = 5; $i >= 1; $i--)
+                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}" {{ old('rating') == $i ? 'checked' : '' }}>
+                <label for="star{{ $i }}" class="star-label">★</label>
+                @endfor
             </div>
         </div>
+
+
+        <div class="form-group">
+            <label class="form-label">Nhận xét</label>
+            <textarea name="comment" rows="4" placeholder="Hãy chia sẻ cảm nhận của bạn..."></textarea>
+        </div>
+
+        <button type="submit" class="btn1 btn-submit-review">Gửi đánh giá</button>
+    </form>
+
+    @elseif(!$hasPurchased)
+    <p class="text-muted">Bạn cần mua sản phẩm này trước khi đánh giá.</p>
+
+    @elseif($hasReviewed)
+    <p class="text-muted">Bạn đã đánh giá sản phẩm này.</p>
     @endif
+
+    @else
+    <p>Vui lòng <a href="{{ route('login.form') }}">đăng nhập</a> để viết đánh giá.</p>
+    @endauth
+</div>
+</div>
+
+{{-- đạt cập nhật --}}
+
+<!-- Related Products -->
+@if(isset($relatedProducts) && $relatedProducts->count())
+<div class="related-section">
+    <h2 class="section-title">Sản phẩm liên quan</h2>
+    <div class="related-grid">
+        @foreach($relatedProducts as $rp)
+        <a href="{{ route('products.show', $rp->ProductID) }}" class="related-card">
+            <div class="related-image">
+                <img src="{{ asset('assets/product_images/' . $rp->Image) }}" alt="{{ $rp->ProductName }}">
+                <div class="related-overlay">
+                    <span class="view-detail">Xem chi tiết</span>
+                </div>
+            </div>
+            <div class="related-info">
+                <p class="related-name">{{ \Illuminate\Support\Str::limit($rp->ProductName, 50) }}</p>
+                <p class="related-price">{{ number_format($rp->Price, 0, ',', '.') }} ₫</p>
+            </div>
+        </a>
+        @endforeach
+    </div>
+</div>
+@endif
 </div>
 
 {{-- Pop up sửa review --}}
@@ -398,7 +415,7 @@
         <select name="rating" id="editRating" class="form-control">
             @for($i=1;$i<=5;$i++)
                 <option value="{{ $i }}">{{ $i }} sao</option>
-            @endfor
+                @endfor
         </select>
 
         <label>Bình luận:</label>
@@ -430,46 +447,45 @@
         let comment = document.getElementById('edit-comment-' + id).value;
 
         fetch('/reviews/' + id, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                rating: rating,
-                comment: comment
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    rating: rating,
+                    comment: comment
+                })
             })
-        })
-        .then(response => {
-            if (response.ok) location.reload();
-            else alert('Lỗi cập nhật đánh giá');
-        });
+            .then(response => {
+                if (response.ok) location.reload();
+                else alert('Lỗi cập nhật đánh giá');
+            });
     }
     // đạt cập nhật review
 
-    function increaseQty() {
-        var input = document.getElementById('qty-input');
-        var controls = document.querySelector('.qty-controls');
-        var stock = parseInt(controls.dataset.stock) || 0;
-        var current = parseInt(input.value) || 1;
-
-        if (current < stock) {
-            input.value = current + 1;
-        } else {
-            alert('⚠️ Sản phẩm chỉ còn ' + stock + ' sản phẩm trong kho! Không thể tăng thêm.');
-            return;
-        }
-        syncQuantity();
-    }
-    
     function decreaseQty() {
-        var input = document.getElementById('qty-input');
-        if (parseInt(input.value) > 1) {
-            input.value = parseInt(input.value) - 1;
-            syncQuantity();
+        let input = document.getElementById('qty-input');
+        let value = parseInt(input.value);
+
+        if (value > 1) {
+            input.value = value - 1;
         }
     }
-    
+
+    function increaseQty() {
+        let input = document.getElementById('qty-input');
+        let value = parseInt(input.value);
+        let maxStock = parseInt(document.querySelector('.qty-controls').dataset.stock);
+
+        if (value < maxStock) {
+            input.value = value + 1;
+        } else {
+            alert("Số lượng tối đa là " + maxStock + ". Không thể thêm nữa.");
+        }
+    }
+
+
     function syncQuantity() {
         var qtyInput = document.getElementById('qty-input');
         var addFormQty = document.querySelector('#add-form input[name="quantity"]');
@@ -480,22 +496,34 @@
         addFormQty.value = value;
         buyFormQty.value = value;
     }
-    
+
+
+    function setBuyNowQuantity() {
+        let qty = document.getElementById('qty-input').value;
+        document.getElementById('buy-now-qty').value = qty;
+    }
+
     document.getElementById('qty-input').addEventListener('change', syncQuantity);
     syncQuantity();
 </script>
 
 <style>
+    .btn-disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 
     /* Wrapper nút */
-    .review-actions, .edit-actions {
+    .review-actions,
+    .edit-actions {
         display: flex;
         gap: 10px;
         /* margin-top: 10px; */
     }
 
-    .review-actions{
-        margin-top:10px;
+    .review-actions {
+        margin-top: 10px;
     }
 
     /* Base button */
@@ -518,6 +546,7 @@
         color: #c2185b;
         border: 1px solid #ffc1d9;
     }
+
     .review-btn.edit:hover {
         background: #ffc7dd;
     }
@@ -528,6 +557,7 @@
         color: #d32f2f;
         border: 1px solid #ffbebe;
     }
+
     .review-btn.delete:hover {
         background: #ffbebe;
     }
@@ -538,6 +568,7 @@
         color: #2e7d32;
         border: 1px solid #b6e4c1;
     }
+
     .review-btn.save:hover {
         background: #c9efd1;
     }
@@ -548,6 +579,7 @@
         color: #555;
         border: 1px solid #d6d6d6;
     }
+
     .review-btn.cancel:hover {
         background: #dcdcdc;
     }
@@ -1011,9 +1043,9 @@
         transition: all 0.2s;
     }
 
-    .star-rating-input input[type="radio"]:checked ~ .star-label,
+    .star-rating-input input[type="radio"]:checked~.star-label,
     .star-rating-input .star-label:hover,
-    .star-rating-input .star-label:hover ~ .star-label {
+    .star-rating-input .star-label:hover~.star-label {
         color: #ffb400;
         transform: scale(1.1);
     }
@@ -1186,7 +1218,8 @@
             padding: 40px 30px;
         }
 
-        .reviews-card, .related-section {
+        .reviews-card,
+        .related-section {
             padding: 35px;
         }
     }
@@ -1218,7 +1251,8 @@
             text-align: left;
         }
 
-        .reviews-card, .related-section {
+        .reviews-card,
+        .related-section {
             padding: 25px;
         }
 

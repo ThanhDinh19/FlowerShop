@@ -114,6 +114,7 @@ class LoginGoogleController extends Controller
                 'Address' => "",
                 'Role' => "customer",
                 'google_id' => $googleUser->id,
+                'Avatar' => $googleUser->avatar, 
                 'Password' => bcrypt('123456789')
             ]);
 
