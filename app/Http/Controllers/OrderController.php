@@ -25,6 +25,19 @@ class OrderController extends Controller
     public function confirm(Request $request)
     {
         $user = Auth::user();
+
+        $request->validate([
+            'PhoneNumber' => 'required|string|max:15',
+            'Address' => 'required|string|max:255',
+            'DeliveryDateTime' => 'required|date|after_or_equal:today',
+            'RecipientAddress' => 'nullable|string|max:255',
+            'MessageToRecipient' => 'nullable|string|max:500',
+            'PaymentMethod' => 'required|in:cash,vnpay',
+        ], [
+            'PhoneNumber.required' => 'Vui lòng nhập số điện thoại.',
+            'Address.required' => 'Vui lòng nhập địa chỉ.',
+        ]);
+
         // --- Lưu thông tin người dùng sửa lại trước khi tạo đơn ---
         $user->update([
             'PhoneNumber' => $request->PhoneNumber,
@@ -38,12 +51,8 @@ class OrderController extends Controller
 
         $total = $cartItems->sum(fn($item) => $item->product->Price * $item->Quantity);
 
-        $request->validate([
-            'DeliveryDateTime' => 'required|date|after_or_equal:today',
-            'RecipientAddress' => 'nullable|string|max:255',
-            'MessageToRecipient' => 'nullable|string|max:500',
-            'PaymentMethod' => 'required|in:cash,vnpay',
-        ]);
+
+
 
         $deliveryTime = \Carbon\Carbon::parse($request->DeliveryDateTime, 'Asia/Ho_Chi_Minh');
 
