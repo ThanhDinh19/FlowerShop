@@ -173,4 +173,57 @@ class AdminProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'Xoá sản phẩm thành công!');
     }
+
+    // phương thức tìm kiếm sản phẩm
+    public function search(Request $request){
+        $keyword = $request->input('keyword');
+        $sortPrice = $request->query('sort_price');
+        $sortStock = $request->query('sort_stock');
+        $selectedCategories = $request->query('categories', []);
+
+        $query = Product::with('category');
+
+        // ✅ Tìm kiếm theo từ khóa
+        if (!empty($keyword)) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('ProductName', 'LIKE', "%{$keyword}%")
+                  ->orWhere('Description', 'LIKE', "%{$keyword}%");
+            });
+        }
+
+        // ✅ Lọc theo danh mục
+        if (!empty($selectedCategories)) {
+            $query->whereIn('CategoryID', $selectedCategories);
+        }
+
+        // ✅ Sắp xếp theo giá
+        if ($sortPrice === 'asc') {
+            $query->orderBy('Price', 'asc');
+        } elseif ($sortPrice === 'desc') {
+            $query->orderBy('Price', 'desc');
+        }
+
+        // ✅ Sắp xếp theo số lượng
+        if ($sortStock === 'asc') {
+            $query->orderBy('StockQuantity', 'asc');
+        } elseif ($sortStock === 'desc') {
+            $query->orderBy('StockQuantity', 'desc');
+        }
+
+        // ✅ Mặc định sắp xếp theo ID nếu không có filter
+        if (!$sortPrice && !$sortStock) {
+            $query->oldest('ProductID');
+        }
+
+        $products = $query->paginate(10)->appends([
+            'keyword' => $keyword,
+            'sort_price' => $sortPrice,
+            'sort_stock' => $sortStock,
+            'categories' => $selectedCategories,
+        ]);
+
+        $categories = Category::all();
+
+        return view('admin.products.index', compact('products', 'sortPrice', 'sortStock', 'selectedCategories', 'categories', 'keyword'));
+    }
 }

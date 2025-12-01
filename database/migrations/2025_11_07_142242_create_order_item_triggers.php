@@ -59,9 +59,17 @@ return new class extends Migration
             FOR EACH ROW
             BEGIN
                 DECLARE available_stock INT;
+                DECLARE total_in_cart INT;
+                
                 SELECT StockQuantity INTO available_stock FROM products WHERE ProductID = NEW.ProductID;
-
-                IF available_stock < NEW.Quantity THEN
+                
+                -- Tính tổng số lượng của sản phẩm này đã có trong giỏ
+                SELECT COALESCE(SUM(Quantity), 0) INTO total_in_cart 
+                FROM cart_items 
+                WHERE ProductID = NEW.ProductID;
+                
+                -- Kiểm tra: tổng trong giỏ + số lượng mới <= tồn kho
+                IF (total_in_cart + NEW.Quantity) > available_stock THEN
                     SIGNAL SQLSTATE "45000"
                     SET MESSAGE_TEXT = "Không thể thêm vào giỏ: không đủ tồn kho.";
                 END IF;
@@ -75,18 +83,32 @@ return new class extends Migration
             FOR EACH ROW
             BEGIN
                 DECLARE available_stock INT;
+                DECLARE total_in_cart INT;
 
                 IF NEW.ProductID = OLD.ProductID AND NEW.Quantity > OLD.Quantity THEN
                     SELECT StockQuantity INTO available_stock FROM products WHERE ProductID = NEW.ProductID;
-
-                    IF available_stock < NEW.Quantity THEN
+                    
+                    -- Tính tổng số lượng của sản phẩm này trong giỏ (không tính item hiện tại)
+                    SELECT COALESCE(SUM(Quantity), 0) INTO total_in_cart 
+                    FROM cart_items 
+                    WHERE ProductID = NEW.ProductID AND CartItemID != NEW.CartItemID;
+                    
+                    -- Kiểm tra: tổng trong giỏ + số lượng mới <= tồn kho
+                    IF (total_in_cart + NEW.Quantity) > available_stock THEN
                         SIGNAL SQLSTATE "45000"
                         SET MESSAGE_TEXT = "Không thể tăng số lượng trong giỏ: không đủ tồn kho.";
                     END IF;
 
                 ELSEIF NEW.ProductID <> OLD.ProductID THEN
                     SELECT StockQuantity INTO available_stock FROM products WHERE ProductID = NEW.ProductID;
-                    IF available_stock < NEW.Quantity THEN
+                    
+                    -- Tính tổng số lượng của sản phẩm mới trong giỏ
+                    SELECT COALESCE(SUM(Quantity), 0) INTO total_in_cart 
+                    FROM cart_items 
+                    WHERE ProductID = NEW.ProductID AND CartItemID != NEW.CartItemID;
+                    
+                    -- Kiểm tra: tổng trong giỏ + số lượng mới <= tồn kho
+                    IF (total_in_cart + NEW.Quantity) > available_stock THEN
                         SIGNAL SQLSTATE "45000"
                         SET MESSAGE_TEXT = "Không thể đổi sản phẩm trong giỏ: sản phẩm mới không đủ tồn kho.";
                     END IF;

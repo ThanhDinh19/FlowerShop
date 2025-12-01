@@ -113,6 +113,8 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/dashboard', [AdminController::class, 'index'])
         ->name('dashboard');
 
+    // Route tìm kiếm sản phẩm trong trang quản lý (PHẢI ĐẶT TRƯỚC resource)
+    Route::get('products/search', [AdminProductController::class, 'search'])->name('products.search');
     // Route quản lý sản phẩm
     Route::resource('products', AdminProductController::class);
 

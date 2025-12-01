@@ -10,6 +10,32 @@
     </a>
 </div>
 
+<form action="{{ route('admin.products.search') }}" method="GET" class="mb-3">
+    <div class="row g-2">
+        <div class="col-md-8">
+            <div class="input-group">
+                <input type="text" name="keyword" class="form-control" placeholder="Tìm kiếm theo tên hoặc mô tả..." value="{{ isset($keyword) ? $keyword : '' }}">
+                <button class="btn btn-pink text-white" type="submit" style="background-color:#d63384;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary w-100">
+                <i class="fa-solid fa-arrow-rotate-left"></i> Xóa bộ lọc
+            </a>
+        </div>
+    </div>
+    <!-- Hidden inputs để giữ các filter khi tìm kiếm -->
+    <input type="hidden" name="sort_price" value="{{ $sortPrice ?? '' }}">
+    <input type="hidden" name="sort_stock" value="{{ $sortStock ?? '' }}">
+    @if(!empty($selectedCategories))
+        @foreach($selectedCategories as $cat)
+            <input type="hidden" name="categories[]" value="{{ $cat }}">
+        @endforeach
+    @endif
+</form>
+
 <table class="table table-bordered align-middle shadow-sm">
     <thead class="table-pink" style="background-color:#f9d3e3;">
         <tr>
@@ -97,7 +123,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach ($products as $p)
+        @forelse ($products as $p)
             <tr>
                 <td>{{ $p->ProductID }}</td>
                 <td>
@@ -125,7 +151,20 @@
                     </form>
                 </td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <i class="fa-solid fa-inbox text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">
+                        @if(isset($keyword) && !empty($keyword))
+                            Không tìm thấy sản phẩm với từ khóa "<strong>{{ $keyword }}</strong>"
+                        @else
+                            Không có sản phẩm nào
+                        @endif
+                    </p>
+                </td>
+            </tr>
+        @endforelse
     </tbody>
 </table>
 
