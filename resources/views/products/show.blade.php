@@ -266,7 +266,7 @@
                         {{ strtoupper(substr($r->user->FirstName ?? 'K', 0, 1)) }}
                     </div>
                     <div>
-                        <div class="reviewer-name">{{ $r->user->FirstName ?? 'Khách' }}</div>
+                        <div class="reviewer-name">{{ $r->user->LastName ?? 'Khách' }}</div>
                         <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
                     </div>
                 </div>

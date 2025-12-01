@@ -19,7 +19,7 @@ class ProductController extends Controller
             return redirect()->route('home')->with('info', 'Vui lòng nhập từ khoá tìm kiếm.');
         }
 
-        $products = Product::where('ProductName', 'LIKE', '%'.$query.'%')
+        $products = Product::where('ProductName', 'LIKE', '%' . $query . '%')
             ->paginate(20);
 
         return view('products.search_results', compact('products', 'query'));
@@ -35,7 +35,7 @@ class ProductController extends Controller
             return response()->json([]);
         }
 
-        $products = Product::where('ProductName', 'LIKE', '%'.$query.'%')
+        $products = Product::where('ProductName', 'LIKE', '%' . $query . '%')
             ->limit(10)
             ->get(['ProductID', 'ProductName', 'Price', 'Image']);
 
@@ -57,7 +57,6 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        // Lấy các sản phẩm liên quan: cùng danh mục, bỏ qua sản phẩm hiện tại
         $relatedProducts = collect();
         if ($product->CategoryID) {
             $relatedProducts = Product::where('CategoryID', $product->CategoryID)
@@ -66,25 +65,21 @@ class ProductController extends Controller
                 ->get();
         }
 
-        // Lấy đánh giá cho sản phẩm
         $reviews = $product->reviews()->with('user')->latest()->get();
         $averageRating = $reviews->count() ? round($reviews->avg('rating'), 1) : null;
 
-        // 👉 Thêm 2 biến để kiểm tra quyền đánh giá
         $hasPurchased = false;
         $hasReviewed = false;
         if (Auth::check()) {
             $user = Auth::user();
 
-            // ➤ Kiểm tra user đã mua sản phẩm chưa (status = paid)
             $hasPurchased = OrderItem::where('ProductID', $product->ProductID)
                 ->whereHas('order', function ($q) use ($user) {
                     $q->where('UserID', $user->UserID)
-                        ->where('Status', 'delivered'); // chỉ đơn hàng đã thanh toán và giao hàng xong
+                        ->where('Status', 'delivered');
                 })
                 ->exists();
 
-            // ➤ Kiểm tra user đã từng review chưa
             $hasReviewed = Review::where('product_id', $product->ProductID)
                 ->where('user_id', $user->UserID)
                 ->exists();
@@ -93,7 +88,7 @@ class ProductController extends Controller
         return view('products.show', compact(
             'product',
             'relatedProducts',
-            'reviews', 
+            'reviews',
             'averageRating',
             'hasPurchased',
             'hasReviewed'
