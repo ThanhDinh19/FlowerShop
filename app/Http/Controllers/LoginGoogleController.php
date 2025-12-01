@@ -85,14 +85,14 @@ class LoginGoogleController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            // 1️⃣ Nếu tài khoản đã có google_id → login không đổi dữ liệu
+            //  Nếu tài khoản đã có google_id → login không đổi dữ liệu
             $user = User::where('google_id', $googleUser->id)->first();
             if ($user) {
                 Auth::login($user);
                 return redirect()->intended('/');
             }
 
-            // 2️⃣ Nếu email đã tồn tại → chỉ liên kết google_id (KHÔNG ghi đè dữ liệu)
+            // Nếu email đã tồn tại → chỉ liên kết google_id (KHÔNG ghi đè dữ liệu)
             $existingUser = User::where('Email', $googleUser->email)->first();
             if ($existingUser) {
 
@@ -105,7 +105,7 @@ class LoginGoogleController extends Controller
                 return redirect()->intended('/');
             }
 
-            // 3️⃣ Nếu user hoàn toàn mới → tạo mới
+            //  Nếu user hoàn toàn mới → tạo mới
             $newUser = User::create([
                 'FirstName' => '',
                 'LastName' => $googleUser->name,

@@ -29,4 +29,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(CartItem::class, 'UserID');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'user_id', 'UserID');
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(Contact::class, 'user_id', 'UserID');
+    }
+
+    public function getFullNameAttribute()
+    {
+        return trim(($this->FirstName ?? '') . ' ' . ($this->LastName ?? ''));
+    }
 }

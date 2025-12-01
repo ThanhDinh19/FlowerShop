@@ -140,22 +140,37 @@
     <div class="review-item">
         <div class="review-header">
             <div class="reviewer-info">
-                <div class="reviewer-avatar">{{ substr($r->user ? $r->user->name : 'K', 0, 1) }}</div>
+                <div class="reviewer-avatar">
+                    @if(optional($r->user)->Avatar)
+                    <img src="{{ $r->user->Avatar }}" alt="avatar">
+                    @else
+                    {{ strtoupper(substr(optional($r->user)->LastName ?? 'K', 0, 1)) }}
+                    @endif
+                </div>
+
                 <div>
-                    <div class="reviewer-name">{{ $r->user ? $r->user->name : 'Khách' }}</div>
+                    <!-- <div class="reviewer-name">
+                        @php
+                        $first = optional($r->user)->FirstName;
+                        $last = optional($r->user)->LastName;
+                        $fullName = trim($first . ' ' . $last);
+                        @endphp
+                        <div class="reviewer-name">
+                            {{ $fullName ?: 'Khách' }}
+                        </div>
+                    </div> -->
+                    <div class="reviewer-name">{{ $r->user->FirstName ?? 'Khách' }}</div>
                     <div class="review-date">{{ $r->created_at->format('d/m/Y') }}</div>
                 </div>
             </div>
+
             <div class="review-stars">
                 @for($i=1;$i<=5;$i++)
-                    @if($i <=$r->rating)
-                    <span class="star filled">★</span>
-                    @else
-                    <span class="star">★</span>
-                    @endif
+                    <span class="star {{ $i <= $r->rating ? 'filled' : '' }}">★</span>
                     @endfor
             </div>
         </div>
+
         @if($r->comment)
         <div class="review-comment">{{ $r->comment }}</div>
         @endif
@@ -470,6 +485,7 @@
 
         if (value > 1) {
             input.value = value - 1;
+
         }
     }
 
@@ -480,6 +496,7 @@
 
         if (value < maxStock) {
             input.value = value + 1;
+
         } else {
             alert("Số lượng tối đa là " + maxStock + ". Không thể thêm nữa.");
         }
